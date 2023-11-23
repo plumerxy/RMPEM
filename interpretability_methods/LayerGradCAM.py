@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import json
 import random
@@ -8,7 +9,7 @@ from copy import deepcopy
 from captum.attr import LayerGradCam
 from utilities.util import graph_to_tensor, standardize_scores
 
-def LayerGradCAM(classifier_model, config, dataset_features, GNNgraph_list, current_fold=None, cuda=0):
+def LayerGradCAM(classifier_model, config, dataset_features, GNNgraph_list, current_fold=None, cuda=0, **kwargs):
 	'''
 		Attribute to input layer using soft assign
 		:param classifier_model: trained classifier model GNN
@@ -26,10 +27,13 @@ def LayerGradCAM(classifier_model, config, dataset_features, GNNgraph_list, curr
 
 	# Perform grad cam on the classifier model and on a specific layer
 	layer_idx = interpretability_config["layer"]
-	if layer_idx == 0:
-		gc = LayerGradCam(classifier_model, classifier_model.graph_convolution)
+	if len(kwargs) > 0:
+		gc = LayerGradCam(classifier_model, classifier_model.conv1)  # ptc-fr conv1, else conv3
 	else:
-		gc = LayerGradCam(classifier_model, classifier_model.conv_modules[layer_idx-1])
+		if layer_idx == 0:
+			gc = LayerGradCam(classifier_model, classifier_model.graph_convolution)
+		else:
+			gc = LayerGradCam(classifier_model, classifier_model.conv_modules[layer_idx-1])
 
 	output_for_metrics_calculation = []
 	output_for_generating_saliency_map = {}
@@ -37,6 +41,7 @@ def LayerGradCAM(classifier_model, config, dataset_features, GNNgraph_list, curr
 	# Obtain attribution score for use in qualitative metrics
 	tmp_timing_list = []
 
+	i = 0
 	for GNNgraph in GNNgraph_list:
 		output = {'graph': GNNgraph}
 		for _, label in dataset_features["label_dict"].items():
@@ -45,15 +50,14 @@ def LayerGradCAM(classifier_model, config, dataset_features, GNNgraph_list, curr
 			original_label = GNNgraph.label
 			GNNgraph.label = label
 
-			node_feat, n2n, subg = graph_to_tensor(
-				[GNNgraph], dataset_features["feat_dim"],
-				dataset_features["edge_feat_dim"], cuda)
-
-			start_generation = perf_counter()
-
-			attribution = gc.attribute(node_feat,
-									   additional_forward_args=(n2n, subg, [GNNgraph]),
-									   target=label, relu_attributions = True)
+			if len(kwargs) > 0:
+				data = kwargs["data"][i]
+				start_generation = perf_counter()
+				node_feat = data.x
+				edge_index = data.edge_index
+				attribution = gc.attribute(node_feat,
+										   additional_forward_args=edge_index,
+										   target=label, relu_attributions=True)
 
 			# Attribute to the input layer using the assign method specified
 			reverse_assign_tensor_list = []
@@ -81,9 +85,15 @@ def LayerGradCAM(classifier_model, config, dataset_features, GNNgraph_list, curr
 
 			GNNgraph.label = original_label
 
+			#  ---------------- 只展示5个最重要的节点---------------------
+			# index = np.argsort(np.array(attribution_score))[:-5]
+			# attribution_score_nd = np.array(attribution_score)
+			# attribution_score_nd[index] = 0
+			# attribution_score = attribution_score_nd.tolist()
+
 			output[label] = attribution_score
 		output_for_metrics_calculation.append(output)
-
+		i += 1
 	execution_time = sum(tmp_timing_list)/(len(tmp_timing_list))
 
 	# Obtain attribution score for use in generating saliency map for comparison with zero tensors
@@ -113,7 +123,7 @@ def LayerGradCAM(classifier_model, config, dataset_features, GNNgraph_list, curr
 		output_for_generating_comparing_saliency_map = {}
 		output_for_generating_comparing_saliency_map.update({"layergradcam_class_non%s" % str(label): []
 															 for _, label in dataset_features[
-																 "label_dict"].items()})  # 为了更好的分析解释结果，除了原标签外，再把另一个类的结果也输出可视化看一下。
+																 "label_dict"].items()})
 
 		# Begin appending found samples
 		for index in graph_idxes:

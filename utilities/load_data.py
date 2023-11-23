@@ -102,7 +102,7 @@ def unserialize_pickle_file(path):
 
 def unserialize_pickle(dataset_name):
 	# Unserialize the pickled file
-	with open("data/%s/%s.p" % (dataset_name, dataset_name), 'rb') as pickled_file:
+	with open("./data/%s/%s.p" % (dataset_name, dataset_name), 'rb') as pickled_file:
 		nxgraph_list = pickle.load(pickled_file)  # 解压出来是图的list 每个元素都是一个graph
 		pickled_file.close()
 

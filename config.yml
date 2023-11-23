@@ -8,46 +8,13 @@ run:
   learning_rate : 0.0001
   seed: 1800
   k_fold: 5
-GNN_models:
-  DGCNN:
-    convolution_layers_size : 32-32-32-1
-    sortpooling_k : 0.6
-    n_hidden : 128
-    convolution_dropout: 0.5
-    pred_dropout : 0.5
-    FP_len : 0
-  GCN:
-    convolution_layers_size : 128-256-512
-    dropout: 0.5
-  GCND:
-    convolution_layers_size: 128-256-512
-    dropout: 0.5
-  DiffPool:
-    convolution_layers_size : 64-64-64
-    pred_hidden_layers: 50-50-50
-    assign_ratio: 0.25
-    number_of_pooling: 1
-    concat_tensors: False
-  DiffPoolD:
-    convolution_layers_size : 64-64-64
-    pred_hidden_layers: 50-50-50
-    assign_ratio: 0.25
-    number_of_pooling: 1
-    concat_tensors: False
 interpretability_methods:
-  DeepLIFT:
-    enabled: False
-    compare_with_zero_tensor: True
-    compare_with_isomorphic_samples: True
-    number_of_zero_tensor_samples: 3
-    sample_ids:
-    number_of_isomorphic_sample_pairs: 5
   saliency:
-    enabled: True
+    enabled: False
     number_of_samples: 3
     sample_ids:
   LayerGradCAM:
-    enabled: True
+    enabled: False
     number_of_samples: 3
     sample_ids:
     layer: 0
@@ -56,23 +23,19 @@ interpretability_methods:
     enabled: False
     number_of_samples: 3
     sample_ids:
-  RISEv2:
+  PGexplainer:
     enabled: False
     number_of_samples: 3
     sample_ids:
-  RISEv3:
+  GNNexplainer:
     enabled: False
     number_of_samples: 3
     sample_ids:
-  RISEv4:
+  CFExplainer:
     enabled: False
     number_of_samples: 3
     sample_ids:
-  RISEv5:
-    enabled: False
-    number_of_samples: 3
-    sample_ids:
-  RISEv6:
+  ZORRO:
     enabled: True
     number_of_samples: 3
     sample_ids:
@@ -80,12 +43,15 @@ metrics:
   fidelity:
     enabled: True
     importance_range: 0.5,1
+    importance_prop: 0.25
   contrastivity:
     enabled: True
     importance_range: 0.5,1
+    importance_prop: 0.25
   sparsity:
     enabled: True
     importance_range: 0.5,1
+    importance_prop: 0.5
 custom_visualisation_options:
   GNN_models:
     DiffPool:
