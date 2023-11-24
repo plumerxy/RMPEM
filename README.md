@@ -17,8 +17,8 @@ The choice of explanation method can be configured in the config.yml file. This 
 
 
 ### System Requirements
-Python installed (preferably Python 3.7).
-Relevant libraries and dependencies for the program are installed.
-- torch 1.8.0
-- torch-geometric 2.2.0
-A compatible CUDA-enabled GPU if using CUDA features (optional).
+- Python installed (preferably Python 3.7).
+- Relevant libraries and dependencies for the program are installed.
+  - torch 1.8.0
+  - torch-geometric 2.2.0
+- A compatible CUDA-enabled GPU if using CUDA features (optional).
